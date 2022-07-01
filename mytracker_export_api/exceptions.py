@@ -1,0 +1,2 @@
+class MyTrackerError(Exception):
+    pass
