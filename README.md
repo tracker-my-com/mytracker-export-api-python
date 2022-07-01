@@ -13,7 +13,7 @@ pip install mytracker-export-api
 ## Starting Out
 
 - Obtain user with [API rights](https://tracker.my.com/docs/api/export-api/access) in MyTracker 
-- See provided examples
+- See provided [examples](https://github.com/tracker-my-com/mytracker-export-api-python/tree/master/examples)
 - Subscribe to our Telegram channel with **news** ([RU](https://t.me/ru_mytracker) / [EN](https://t.me/en_mytracker)) and **support** ([RU](https://t.me/ru_mytracker_chat) / [EN](https://t.me/en_mytracker_chat))
 
 ## Documentation
