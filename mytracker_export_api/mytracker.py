@@ -189,7 +189,7 @@ class MyTracker:
 
                 elif get_response['data']['status'] in ('In progress', 'Error occurred'):
                     try:
-                        time.sleep(3)
+                        time.sleep(4)
                         continue
                     except KeyboardInterrupt:
                         self.cancel_raw_data_export(get_params['idRawExport'])
@@ -207,9 +207,12 @@ class MyTracker:
             elif get_response['code'] == 403:
                 raise MyTrackerError(f'Access denied. Maybe you made mistakes or forgot to send authorization data.{nl}Response: {get_response}')
                 
+            elif get_response['code'] == 429:
+                raise MyTrackerError(f'Too many requests.{nl}Response: {get_response}')
+                
             else:
                 raise MyTrackerError(f'Unknown error.{nl}Response: {get_response}')
-            
+
         return raw_data
     
     def cancel_raw_data_export(self, id_raw_export):
@@ -291,7 +294,7 @@ class MyTracker:
                         raise MyTrackerError('Parameter return_df must be True or False.')
 
                 elif get_response['data']['status'] == 'In progress':
-                    time.sleep(3)
+                    time.sleep(4)
                     continue
 
                 elif get_response['data']['status'] == 'Error occurred':
@@ -302,6 +305,9 @@ class MyTracker:
                 
             elif get_response['code'] == 403:
                 raise MyTrackerError(f'Access denied. Maybe you made mistakes or forgot to send authorization data.{nl}Response: {get_response}')
+                
+            elif get_response['code'] == 429:
+                raise MyTrackerError(f'Too many requests.{nl}Response: {get_response}')
 
             else:
                 raise MyTrackerError(f'Unknown error.{nl}Response: {get_response}')
@@ -349,7 +355,7 @@ class MyTracker:
                     break
 
                 elif get_response['data']['status'] in ('In progress', 'Error occurred'):
-                    time.sleep(3)
+                    time.sleep(4)
                     continue
 
             elif get_response['code'] == 404:
@@ -357,6 +363,9 @@ class MyTracker:
             
             elif get_response['code'] == 403:
                 raise MyTrackerError(f'Access denied. Maybe you made mistakes or forgot to send authorization data.{nl}Response: {get_response}')
+                
+            elif get_response['code'] == 429:
+                raise MyTrackerError(f'Too many requests.{nl}Response: {get_response}')
             
             else:
                 raise MyTrackerError(f'Unknown error.{nl}Response: {get_response}')
