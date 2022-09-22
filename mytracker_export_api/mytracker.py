@@ -4,9 +4,12 @@ import base64
 import time
 import requests
 import pandas as pd
+import ssl
+import warnings
 from binascii import b2a_base64
 from urllib.parse import urlencode, quote_plus
 from urllib.request import urlopen
+from urllib3.exceptions import InsecureRequestWarning
 from .exceptions import MyTrackerError
 
 
@@ -26,9 +29,15 @@ class MyTracker:
     GET_SEGMENT_URL = 'https://tracker.my.com/api/segment/v1/export/get.json'
     
     
-    def __init__(self, api_user_id, api_secret_key):
+    def __init__(self, api_user_id, api_secret_key, ssl_verify=True):
         self.api_user_id = api_user_id
         self.api_secret_key = api_secret_key
+        self.ssl_verify = ssl_verify
+        self.urllib_context = None
+        if not ssl_verify:
+            self.urllib_context = ssl.create_default_context()
+            self.urllib_context.check_hostname = False
+            self.urllib_context.verify_mode = ssl.CERT_NONE
     
     def _get_signature(self, url, method, data='') -> str:
         ''' Getting a signature. '''
@@ -46,10 +55,14 @@ class MyTracker:
         if not headers:
             headers = {}
         headers['Authorization'] = self._get_signature(url, method)
-        if method.upper() == 'GET':
-            return requests.get(url=url, headers=headers)
-        elif method.upper() == 'POST':
-            return requests.post(url=url, headers=headers)
+
+        with warnings.catch_warnings():
+            if not self.ssl_verify:
+                warnings.simplefilter('ignore', InsecureRequestWarning)
+            if method.upper() == 'GET':
+                return requests.get(url=url, headers=headers, verify=self.ssl_verify)
+            elif method.upper() == 'POST':
+                return requests.post(url=url, headers=headers, verify=self.ssl_verify)
     
     def create_export(self, create_params, url):
         ''' 
@@ -177,7 +190,7 @@ class MyTracker:
                         raw_data = []
                         for file in get_response['data']['files']:
                             link = file['link']
-                            with urlopen(link, timeout=10) as f:
+                            with urlopen(link, timeout=10, context=self.urllib_context) as f:
                                 raw_file = pd.read_csv(f, compression='gzip')
                             raw_data.append(raw_file)
                         raw_data = pd.concat(raw_data, ignore_index=True)
@@ -285,7 +298,7 @@ class MyTracker:
                 if get_response['data']['status'] == 'Success!':
                     if return_df is True:
                         link = get_response['data']['files'][0]['link']
-                        with urlopen(link, timeout=10) as file:
+                        with urlopen(link, timeout=10, context=self.urllib_context) as file:
                             report = pd.read_csv(file, compression='gzip')
                         break
                     elif return_df is False:
