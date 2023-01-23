@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='mytracker_export_api',
-    version='1.0.1',
+    version='1.0.2',
     description='Python wrapper for MyTracker Export API.',
     packages=['mytracker_export_api'],
     author='Artyom Novopolsky',

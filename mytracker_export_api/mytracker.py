@@ -6,7 +6,7 @@ import requests
 import pandas as pd
 from binascii import b2a_base64
 from urllib.parse import urlencode, quote_plus
-from urllib.request import urlopen
+from urllib.request import ProxyHandler, build_opener, install_opener, urlopen 
 from .exceptions import MyTrackerError
 
 
@@ -26,9 +26,26 @@ class MyTracker:
     GET_SEGMENT_URL = 'https://tracker.my.com/api/segment/v1/export/get.json'
     
     
-    def __init__(self, api_user_id, api_secret_key):
+    def __init__(self, api_user_id, api_secret_key, proxies=None):
+        '''
+        MyTracker class initialization. 
+
+        -----------
+        Parameters:
+            api_user_id (int): API User ID
+            api_secret_key (str): API Secret Key
+            proxies (dict, optional): dictionary mapping protocol to the URL of the proxy
+
+        Example:
+            proxies = {
+               'http': 'http://proxy.example.com:8080',
+               'https': 'http://secureproxy.example.com:8090',
+            }
+        '''
+        
         self.api_user_id = api_user_id
         self.api_secret_key = api_secret_key
+        self.proxies = proxies
     
     def _get_signature(self, url, method, data='') -> str:
         ''' Getting a signature. '''
@@ -47,9 +64,9 @@ class MyTracker:
             headers = {}
         headers['Authorization'] = self._get_signature(url, method)
         if method.upper() == 'GET':
-            return requests.get(url=url, headers=headers)
+            return requests.get(url=url, headers=headers, proxies=self.proxies)
         elif method.upper() == 'POST':
-            return requests.post(url=url, headers=headers)
+            return requests.post(url=url, headers=headers, proxies=self.proxies)
     
     def create_export(self, create_params, url):
         ''' 
@@ -175,6 +192,7 @@ class MyTracker:
                 if get_response['data']['status'] == 'Success!':
                     if return_df is True:
                         raw_data = []
+                        install_opener(build_opener(ProxyHandler(self.proxies)))
                         for file in get_response['data']['files']:
                             link = file['link']
                             with urlopen(link, timeout=10) as f:
@@ -285,6 +303,7 @@ class MyTracker:
                 if get_response['data']['status'] == 'Success!':
                     if return_df is True:
                         link = get_response['data']['files'][0]['link']
+                        install_opener(build_opener(ProxyHandler(self.proxies)))
                         with urlopen(link, timeout=10) as file:
                             report = pd.read_csv(file, compression='gzip')
                         break
